@@ -139,7 +139,7 @@ toFrench : a -> Element
 ```
 |]
 
-helpAt pos = scale 0.6 . opacity 0.6 . move pos
+helpAt pos = scale 0.6 . opacity 0.4 . move pos
 
 syncHelp = [markdown|```haskell
    positions : Signal Element
@@ -242,6 +242,8 @@ frames =
 
     , [ title "Signal Graph"
       , subTitle "A graph interpretation for Elm&rsquo;s core FRP primitives"
+      , Anything <| collage 800 400
+                     [ scale 0.5 . toForm <| image 1161 473 "images/graphs.png" ]
       ]
 
     , [ title "Signal Graph"
@@ -373,7 +375,7 @@ frames =
 
     ]
 
-{--
+{--}
 showFrame pos frame =
     layers [ spacer 800 600 |> color (rgb 245 245 245)
            , flow down <| map (showPart pos) frame ]
@@ -385,7 +387,7 @@ scene w pos = let elem = allFrames pos
 
 main = lift2 scene Window.width Mouse.position
 --}
-{--}
+{--
 steps =
     let f frame i = map ((,) i) [0..length frame - 1]
     in  concat <| zipWith f frames [0 .. length frames]
