@@ -89,9 +89,10 @@ myLift2 = [markdown|```haskell
 shapesCode = [markdown|```haskell
 main = lift scene Mouse.position
 
+scene : (Int,Int) -> Element
 scene (x,y) =
   collage 240 240
-    [ ngon 5 60 |> filled myBlue'
+    [ ngon 5 60 |> filled (rgb 90 99 120)
                 |> rotate (degrees (toFloat x))
                 |> scale (toFloat y / 100) ]
 ```
