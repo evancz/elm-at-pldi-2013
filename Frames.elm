@@ -51,17 +51,19 @@ tEvent = Event myPink
 
 myGrey = rgb 80 80 80
 
-showEventHelp : Event -> [Form]
-showEventHelp {color,x,y,value} =
-    case value of
+showEventHelp fraction {color,x,y,sx,sy,value,svalue} =
+    let x' = sx + (x-sx) * fraction
+        y' = sy + (y-sy) * fraction
+    in
+    case if fraction < 0.6 then svalue else value of
       Change v ->
           let name = text . Text.color myBlue' . Text.height 1.5 . monospace <| toText v
               line = { defaultLine | color <- color, width <- 2 }
               box = rect (widthOf name + 4) (heightOf name - 2)
-          in  [ move (x,y) <| filled white box
-              , move (x,y) <| outlined line box
-              , move (x,y+3) <| toForm name ]
-      NoChange -> [ move (x,y) <| filled color (rect 20 20) ]
+          in  [ move (x',y') <| filled white box
+              , move (x',y') <| outlined line box
+              , move (x',y'+3) <| toForm name ]
+      NoChange -> [ move (x',y') <| filled color (rect 20 20) ]
 
 showPart : Int -> (Int,Int) -> Part -> Element
 showPart clicks (x,y) part =
@@ -170,6 +172,39 @@ translations : Signal (String,String)
 ```
 |]
 
+delayEvent es = case es of
+                  h::t -> h::h::t
+                  [] -> []
+
+positionEvents isChange mEvent x y =
+    let mEvent' x' y' = mEvent (x+x') (y+y')
+        chng s = if isChange then Change s else NoChange
+    in
+    [ chng "(3,4)" |> mEvent' 80 115
+    , chng "(3,4)" |> mEvent' 80 85
+    , chng "(3,4)" |> mEvent' 0 (0-20)
+    , chng "(3,4)" |> mEvent' 0 (0-100)
+    , chng "<Element>" |> mEvent' 20 (0-180)
+    , chng "<Element>" |> mEvent' 100 (0-280) ]
+
+translationEvents isChange tEvent sx sy x y = -- -300 -300
+    let tEvent' x' y' = tEvent (x+x') (y+y')
+        chng s = if isChange then Change s else NoChange
+    in
+    [ [ chng "\"cat\"" |> tEvent' (sx+x) (sy+y)
+      , chng "\"cat\"" |> tEvent' 130 270
+      , chng "\"cat\"" |> tEvent' 60 180
+      , chng "\"cat\"" |> tEvent' 60 180
+      , chng "(\"cat\",\"chat\")" |> tEvent' 110 95
+      ]
+    , [ chng "\"cat\"" |> tEvent' (sx+x) (sy+y)
+      , chng "\"cat\"" |> tEvent' 130 270
+      , chng "\"cat\"" |> tEvent' 200 230
+      , chng "\"chat\"" |> tEvent' 190 170
+      , chng "(\"cat\",\"chat\")" |> tEvent' 110 95
+      ] ]
+
+
 frames : [[Part]]
 frames =
     [ [ Anything titlePage ]
@@ -199,8 +234,8 @@ frames =
       , subBullet "Extensible Records with structural typing"
       , subBullet "Module system and core libraries"
       , bullet "Social features:"
+      , SubBullet <| toText "Hundreds of interactive examples at " ++ Text.link "/" (toText "elm-lang.org")
       , subBullet "Open-source project with lively community"
-      , subBullet "Hundreds of interactive examples at elm-lang.org"
       , subBullet "A highly visible platform for advancing FRP"
       ]
     , [ superTitle "Functional Reactive Programming"
@@ -288,19 +323,7 @@ translations = lift2 (,) words (lift toFrench words)
       , let img = collage 900 350
                   [ scale 0.8 . move (0-200,0) . toForm <| image 309 385 "images/translations.png"
                   , helpAt (140,0) . toForm <| translationHelp ]
-        in  Animated img
-                [ [ Change "\"cat\"" |> tEvent (0-200) 110
-                  , Change "\"cat\"" |> tEvent (0-170) (0-30)
-                  , Change "\"cat\"" |> tEvent (0-240) (0-120)
-                  , Change "\"cat\"" |> tEvent (0-240) (0-120)
-                  , Change "(\"cat\",\"chat\")" |> tEvent (0-190) (0-220)
-                  ]
-                , [ Change "\"cat\"" |> tEvent (0-200) 110
-                  , Change "\"cat\"" |> tEvent (0-170) (0-30)
-                  , Change "\"cat\"" |> tEvent (0-100) (0-70)
-                  , Change "\"chat\"" |> tEvent (0-110) (0-130)
-                  , Change "(\"cat\",\"chat\")" |> tEvent (0-190) (0-220)
-                  ] ]
+        in  Animated img <| translationEvents True tEvent 380 710 (0-300) (0-300)
       ]
 
     , [ title "Concurrency and Pipelining"
@@ -320,11 +343,10 @@ lift2 display positions translations
 positions            async positions
 ```
 |]
-      , Anything <|
-          collage 900 330
-          [ move (0-200,0) . toForm <| image 212 323 "images/positions.png"
-          , move (200,0) . toForm <| image 205 291 "images/asyncPositions.png"
-          ]
+      , Anything <| collage 900 330
+                     [ move (0-200,0) . toForm <| image 212 323 "images/positions.png"
+                     , move (200,0) . toForm <| image 205 291 "images/asyncPositions.png"
+                     ]
       ]
 
     , [ title "Asynchrony"
@@ -332,14 +354,29 @@ positions            async positions
 lift2 display positions (async translations)
 ```
 |]
-      , Anything <| collage 900 400
-                     [ scale 0.8 . toForm <| image 525 451 "images/async.png" ]
+      , let img = collage 900 400
+                  [ scale 0.8 . toForm <| image 525 451 "images/async.png" ]
+        in  Animated img <|
+                map delayEvent (translationEvents False mEvent (0-80) 455 (0-20) (0-185))
+                ++ [ positionEvents True mEvent (0-200) 0
+                   , tail <| positionEvents False tEvent (0-200) 0
+                   ] ++ translationEvents True tEvent (0-80) 465 (0-20) (0-195)
+                 
       ]
 
     , [ title "Signals"
       , Anything myLift1
       , Anything myFoldp
       , Anything myAsync
+      ]
+
+    , [ title "Related Work"
+      , bullet "Pure FRP"
+      , subBullet "Monadic FRP [Elliott and Hudak '97]\nParallel FRP [Peterson, Trifonov, Serjantov, '00]\nReal-Time FRP [Wan, Taha, Hudak, '01 '02]"
+      , bullet "Imperative FRP"
+      , subBullet "FrTime [Cooper, Krishnamurthi, '06]\nFlapjax [Meyerovich, Guha, Baskin, Cooper, Greenberg, Bromfield, Krishnamurthi, '09]"
+      , bullet "Self Adjusting Computation [Acar et al. '02]"
+      , bullet "Concurrent ML and eXene [Reppy et al. '91 '93 '99]"
       ]
 
     , [ title "Relative Expressiveness"
@@ -392,12 +429,12 @@ lift2 display positions (async translations)
     , [ Anything [markdown|<iframe src="http://localhost:8000/edit/examples/Intermediate/Mario.elm" width=900 height=600 style="border:none;"></iframe>|]
       ]
 
-    , [ title "Summary"
+    , [ title "Wrap Up"
+      , Bullet <| toText "Remember to try out Elm at " ++ Text.link "/" (toText "elm-lang.org") ++ toText "! "
+      , subBullet "Gets about 300 visitors each day, reading docs and using the online interactive editor"
       , bullet "Key Contributions:"
       , subBullet "Simple and efficient semantics for FRP"
       , subBullet "Elm, a practical language for purely functional GUIs"
-      , Bullet <| toText "Remember to try out Elm at " ++ Text.link "/" (toText "elm-lang.org") ++ toText "!\n "
-      , Anything [markdown|<iframe src="http://localhost:8000/edit/examples/Intermediate/Clock.elm" width=900 height=240 style="border:none;"></iframe>|]
       ]
 
     ]
@@ -408,7 +445,9 @@ showAllEvents frame =
                            Animated _ events :: _ -> events
                            _ :: tl -> eventsIn tl
                            _ -> []
-    in  collage 900 600 <| concatMap (concatMap showEventHelp) (eventsIn frame)
+        showEventHelp' {x,y,color,value} =
+            showEventHelp 1 { color=color, x=x, y=y, value=value, sx=x, sy=y, svalue=value }
+    in  collage 900 600 <| concatMap (concatMap showEventHelp') (eventsIn frame)
 
 showFrame clicks pos frame =
     layers [ spacer 900 600 |> color (rgb 245 245 245)
@@ -427,8 +466,14 @@ main = scene <~ Window.width ~ count Mouse.clicks ~ Mouse.position
 {--}
 steps =
     let zipN xss = foldr (zipWith (++)) (map (\_ -> []) [1 .. maximum (map length xss)]) (map (map (\xs -> [xs])) xss)
+        pathify events = case events of
+                           [] -> []
+                           h::t -> let start = { h| y <- h.y + 400 }
+                                       extend {x,y,value} e =
+                                           { color = e.color, x = e.x, y = e.y, value = e.value, sx = x, sy = y, svalue = value }
+                                   in  zipWith extend (start :: start :: events) (start :: events)
         g i frame j = case frame of
-                        Animated e events -> map ((,,,) i j False . Just) (zipN events)
+                        Animated e events -> map ((,,,) i j False . Just) (zipN (map pathify events))
                         Mouse _ -> [(i, j, True, Nothing)]
                         _ -> [(i, j, False, Nothing)]
         f frame i = concat <| zipWith (g i) frame [0..length frame - 1]
@@ -436,17 +481,17 @@ steps =
 
 lenSteps = length steps
 
-data Event = KeyPress Int | TimeDelta Time
+data Action = KeyPress Int | TimeDelta Time
 
 arrows = dropIf (\n -> n == 0) 0 <| .x <~ Keyboard.arrows
 
-input : Signal Event
+input : Signal Action
 input = merge (KeyPress <~ arrows)
         (TimeDelta <~ (30 `fpsWhen` ((2*second) `since` arrows)))
 
 data Dir = Forward | Reverse
 
-step : Event -> (Int,Float) -> (Int,Float)
+step : Action -> (Int,Float) -> (Int,Float)
 step event (index, fraction) =
     case event of
       KeyPress x -> ((index + x) `mod` lenSteps, 0)
@@ -460,7 +505,7 @@ xs # i = case xs of
 showFrame w h clicks pos showing fading fraction events =
     let lastShow = map (Graphics.Element.opacity fraction . showPart clicks pos) fading
         frame = container 900 600 topLeft . flow down <| map (showPart clicks pos) showing ++ lastShow
-        overlay = collage 900 600 <| concatMap showEventHelp events
+        overlay = collage 900 600 <| concatMap (showEventHelp fraction) events
         setScale = scale (min (toFloat w / 900) (toFloat h / 600))
     in  collage w h <| [ rect w h |> filled (rgb 245 245 245)
                        , setScale (toForm overlay)
