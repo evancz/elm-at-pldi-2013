@@ -4,6 +4,9 @@ import Keyboard
 import Mouse
 import Window
 
+data Change = Change String | NoChange
+type Event = { color:Color, x:Int, y:Int, value:Change }
+
 data Part
     = SuperTitle Text
     | Title Text
@@ -13,6 +16,7 @@ data Part
     | Anything Element
     | Mouse (Int -> Int -> Element)
     | ClickCount
+    | Animated Element [[Event]]
 
 superTitle = SuperTitle . toText
 title      = Title      . toText
@@ -38,7 +42,26 @@ myBlue = rgb 96 181 204
 myBlue' : Color
 myBlue' = rgb 90 99 120
 
+myYellow = rgb 240 173 0
+myGreen = rgb 127 209 59
+myPink = rgb 234 21 122
+
+mEvent = Event myYellow
+tEvent = Event myPink
+
 myGrey = rgb 80 80 80
+
+showEventHelp : Event -> [Form]
+showEventHelp {color,x,y,value} =
+    case value of
+      Change v ->
+          let name = text . Text.color myBlue' . Text.height 1.5 . monospace <| toText v
+              line = { defaultLine | color <- color, width <- 2 }
+              box = rect (widthOf name + 4) (heightOf name - 2)
+          in  [ move (x,y) <| filled white box
+              , move (x,y) <| outlined line box
+              , move (x,y+3) <| toForm name ]
+      NoChange -> [ move (x,y) <| filled color (rect 20 20) ]
 
 showPart : Int -> (Int,Int) -> Part -> Element
 showPart clicks (x,y) part =
@@ -51,6 +74,7 @@ showPart clicks (x,y) part =
       Anything elem -> elem
       Mouse f -> f x y
       ClickCount -> txt 900 Center 8 myBlue' . monospace . toText <| show clicks
+      Animated e events -> e
       _ -> asText 42
 
 paperTitle = [markdown|
@@ -225,8 +249,7 @@ frames =
     , [ title "Signals so far"
       , Anything myLift1
       , Anything myFoldp
-      , Anything (spacer 900 60)
-      , subTitle "But we are missing something!"
+      , subTitle "\n\nBut we are missing something!"
       ]
 
     , [ title "Concurrency"
@@ -243,31 +266,46 @@ frames =
       ]
 
     , [ title "Signal Graph"
-      , Anything [markdown|```haskell
-      positions = lift asText Mouse.position
+      , Anything <| center [markdown|```haskell
+positions = lift asText Mouse.position
 ```
 |]
-      , Anything <|
-          collage 900 400
-            [ move (0-200,0) . toForm <| image 212 323 "images/positions.png"
-            , helpAt (150,0) . toForm <| positionHelp ]
+      , let img = collage 900 400
+                  [ move (0-200,0) . toForm <| image 212 323 "images/positions.png"
+                  , helpAt (150,0) . toForm <| positionHelp ]
+        in  Animated img
+                [ [ Change "(3,4)" |> mEvent (0-150) 80
+                  , Change "(3,4)" |> mEvent (0-120) (0-60)
+                  , Change "(3,4)" |> mEvent (0-120) (0-140)
+                  , Change "<Element>" |> mEvent (0-170) (0-260) ] ]
       ]
 
     , [ title "Synchronization"
-      , Anything [markdown|```haskell
-     translations =
-         lift2 (,) words (lift toFrench words)
+      , Anything <| center [markdown|```haskell
+translations = lift2 (,) words (lift toFrench words)
 ```
 |]
-      , Anything <|
-          collage 900 350
-            [ scale 0.8 . move (0-200,0) . toForm <| image 309 385 "images/translations.png"
-            , helpAt (140,0) . toForm <| translationHelp ]
+      , let img = collage 900 350
+                  [ scale 0.8 . move (0-200,0) . toForm <| image 309 385 "images/translations.png"
+                  , helpAt (140,0) . toForm <| translationHelp ]
+        in  Animated img
+                [ [ Change "\"cat\"" |> tEvent (0-200) 110
+                  , Change "\"cat\"" |> tEvent (0-170) (0-30)
+                  , Change "\"cat\"" |> tEvent (0-240) (0-120)
+                  , Change "\"cat\"" |> tEvent (0-240) (0-120)
+                  , Change "(\"cat\",\"chat\")" |> tEvent (0-190) (0-220)
+                  ]
+                , [ Change "\"cat\"" |> tEvent (0-200) 110
+                  , Change "\"cat\"" |> tEvent (0-170) (0-30)
+                  , Change "\"cat\"" |> tEvent (0-100) (0-70)
+                  , Change "\"chat\"" |> tEvent (0-110) (0-130)
+                  , Change "(\"cat\",\"chat\")" |> tEvent (0-190) (0-220)
+                  ] ]
       ]
 
     , [ title "Concurrency and Pipelining"
-      , Anything [markdown|```haskell
-       lift2 display positions translations
+      , Anything <| center [markdown|```haskell
+lift2 display positions translations
 ```
 |]
       , Anything <|
@@ -278,8 +316,8 @@ frames =
 
     , [ title "Asynchrony"
       , Anything myAsync
-      , Anything <| [markdown|```haskell
-       positions            async positions
+      , Anything <| center [markdown|```haskell
+positions            async positions
 ```
 |]
       , Anything <|
@@ -290,8 +328,8 @@ frames =
       ]
 
     , [ title "Asynchrony"
-      , Anything [markdown|```haskell
-   lift2 display positions (async translations)
+      , Anything <| center [markdown|```haskell
+lift2 display positions (async translations)
 ```
 |]
       , Anything <| collage 900 400
@@ -301,10 +339,7 @@ frames =
     , [ title "Signals"
       , Anything myLift1
       , Anything myFoldp
-      , Anything [markdown|```haskell
-           async : Signal a -> Signal a
-```
-|]
+      , Anything myAsync
       ]
 
     , [ title "Relative Expressiveness"
@@ -361,15 +396,23 @@ frames =
       , bullet "Key Contributions:"
       , subBullet "Simple and efficient semantics for FRP"
       , subBullet "Elm, a practical language for purely functional GUIs"
-      , Bullet <| toText "And remember to try out Elm at " ++ Text.link "/" (toText "elm-lang.org") ++ toText "!\n "
+      , Bullet <| toText "Remember to try out Elm at " ++ Text.link "/" (toText "elm-lang.org") ++ toText "!\n "
       , Anything [markdown|<iframe src="http://localhost:8000/edit/examples/Intermediate/Clock.elm" width=900 height=240 style="border:none;"></iframe>|]
       ]
 
     ]
 
 {--
+showAllEvents frame =
+    let eventsIn frame = case frame of
+                           Animated _ events :: _ -> events
+                           _ :: tl -> eventsIn tl
+                           _ -> []
+    in  collage 900 600 <| concatMap (concatMap showEventHelp) (eventsIn frame)
+
 showFrame clicks pos frame =
     layers [ spacer 900 600 |> color (rgb 245 245 245)
+           , showAllEvents frame
            , flow down <| map (showPart clicks pos) frame ]
 
 allFrames clicks pos =
@@ -383,17 +426,15 @@ main = scene <~ Window.width ~ count Mouse.clicks ~ Mouse.position
 --}
 {--}
 steps =
-    let f frame i = map ((,) i) [0..length frame - 1]
+    let zipN xss = foldr (zipWith (++)) (map (\_ -> []) [1 .. maximum (map length xss)]) (map (map (\xs -> [xs])) xss)
+        g i frame j = case frame of
+                        Animated e events -> map ((,,,) i j False . Just) (zipN events)
+                        Mouse _ -> [(i, j, True, Nothing)]
+                        _ -> [(i, j, False, Nothing)]
+        f frame i = concat <| zipWith (g i) frame [0..length frame - 1]
     in  concat <| zipWith f frames [0 .. length frames]
 
 lenSteps = length steps
-
-mouseSteps =
-    let combine i j frm = case frm of
-                            Mouse _ -> [(i,j)]
-                            _ -> []
-        f frame i = concat <| zipWith (combine i) [0..length frame - 1] frame
-    in  concat <| zipWith f frames [0 .. length frames]
 
 data Event = KeyPress Int | TimeDelta Time
 
@@ -416,32 +457,37 @@ xs # i = case xs of
            h::t -> if i == 0 then h else t # (i-1)
            [] -> []
 
-showFrame w h clicks pos showing fading fraction =
-    let (showing', fading') =
-            if isEmpty showing then (fading, []) else (showing, fading)
-        lastShow = map (Graphics.Element.opacity fraction . showPart clicks pos) fading'
-        frame = container 900 600 topLeft . flow down <| map (showPart clicks pos) showing' ++ lastShow
-    in  collage w h [ rect w h |> filled (rgb 245 245 245)
-                    , toForm frame
-                        |> scale (min (toFloat w / 900) (toFloat h / 600))
-                    ]
+showFrame w h clicks pos showing fading fraction events =
+    let lastShow = map (Graphics.Element.opacity fraction . showPart clicks pos) fading
+        frame = container 900 600 topLeft . flow down <| map (showPart clicks pos) showing ++ lastShow
+        overlay = collage 900 600 <| concatMap showEventHelp events
+        setScale = scale (min (toFloat w / 900) (toFloat h / 600))
+    in  collage w h <| [ rect w h |> filled (rgb 245 245 245)
+                       , setScale (toForm overlay)
+                       , setScale (toForm frame)
+                       ]
 
-scene (w,h) clicks pos (i,j) fraction =
+scene (w,h) clicks pos (i,j,_,events) fraction =
     let frame = frames # i
-        showing = take j frame
-        fading = case drop j frame of
-                   h::t -> [h]
-                   [] -> []
-    in  showFrame w h clicks pos showing fading fraction
+        noFade = j == 0 || (case events of
+                              Just _ -> True
+                              _ -> False)
+        showing = take (if noFade then j+1 else j) frame
+        fading = if noFade then [] else
+                     (case drop j frame of
+                        h::t -> [h]
+                        [] -> [])
+    in  showFrame w h clicks pos showing fading fraction (case events of
+                                                            Nothing -> []
+                                                            Just es -> es)
 
 state = foldp step (0,1) input
 
 index = lift (\(i,_) -> steps # i) state
 
 position =
-    let isMatch (i,j) =
-            not . isEmpty <| filter (\(i',j') -> i == i' && j >= j') mouseSteps
-    in keepWhen (isMatch <~ index) (0,0) Mouse.position
+    let isMouse (_,_,b,_) = b
+    in  keepWhen (isMouse <~ index) (0,0) Mouse.position
 
 clickCount =
     dropRepeats <|
