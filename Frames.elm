@@ -120,7 +120,7 @@ Mouse.position : Signal (Int,Int)
 
 myLift1 : Element
 myLift1 = center [markdown|```haskell
-lift  : (a -> b) -> Signal a -> Signal b
+lift : (a -> b) -> Signal a -> Signal b
 ```
 |]
 
@@ -173,7 +173,7 @@ Mouse.position : Signal (Int,Int)
 translationHelp = [markdown|```haskell
    words : Signal String
 
-toFrench : a -> Element
+toFrench : String -> String
 ```
 |]
 
@@ -247,7 +247,7 @@ frames =
       , subTitle "A practical language for purely functional GUIs"
       , bullet "Language features:"
       , subBullet "Functional Reactive Programming"
-      , subBullet "Strongly statically typed with type inference"
+      , subBullet "Strong static typing with type inference"
       , subBullet "Extensible Records with structural typing"
       , subBullet "Module system and core libraries"
       , bullet "Social features:"
