@@ -42,13 +42,22 @@ myBlue = rgb 96 181 204
 myBlue' : Color
 myBlue' = rgb 90 99 120
 
+myYellow : Color
 myYellow = rgb 240 173 0
+
+myGreen : Color
 myGreen = rgb 127 209 59
+
+myPink : Color
 myPink = rgb 234 21 122
 
+mEvent : Int -> Int -> Change -> Event
 mEvent = Event myYellow
+
+tEvent : Int -> Int -> Change -> Event
 tEvent = Event myPink
 
+myGrey : Color
 myGrey = rgb 80 80 80
 
 showEventHelp fraction {color,x,y,sx,sy,value,svalue} =
@@ -163,7 +172,7 @@ toFrench : a -> Element
 ```
 |]
 
-helpAt pos = scale 0.6 . opacity 0.4 . move pos
+helpAt pos = scale 0.6 . move pos
 
 syncHelp = [markdown|```haskell
    positions : Signal Element
@@ -176,12 +185,12 @@ delayEvent es = case es of
                   h::t -> h::h::t
                   [] -> []
 
-positionEvents isChange mEvent x y =
+positionEvents isChange mEvent sx sy x y =
     let mEvent' x' y' = mEvent (x+x') (y+y')
         chng s = if isChange then Change s else NoChange
     in
-    [ chng "(3,4)" |> mEvent' 80 115
-    , chng "(3,4)" |> mEvent' 80 85
+    [ chng "(3,4)" |> mEvent' (80+sx) (115+sy)
+    , chng "(3,4)" |> mEvent' (80+sx) (85+sy)
     , chng "(3,4)" |> mEvent' 0 (0-20)
     , chng "(3,4)" |> mEvent' 0 (0-100)
     , chng "<Element>" |> mEvent' 20 (0-180)
@@ -195,13 +204,15 @@ translationEvents isChange tEvent sx sy x y = -- -300 -300
       , chng "\"cat\"" |> tEvent' 130 270
       , chng "\"cat\"" |> tEvent' 60 180
       , chng "\"cat\"" |> tEvent' 60 180
-      , chng "(\"cat\",\"chat\")" |> tEvent' 110 95
+      , chng "?" |> tEvent' 110 145
+      , chng "(\"cat\",\"chat\")" |> tEvent' 110 80
       ]
     , [ chng "\"cat\"" |> tEvent' (sx+x) (sy+y)
       , chng "\"cat\"" |> tEvent' 130 270
       , chng "\"cat\"" |> tEvent' 200 230
       , chng "\"chat\"" |> tEvent' 190 170
-      , chng "(\"cat\",\"chat\")" |> tEvent' 110 95
+      , chng "?" |> tEvent' 110 145
+      , chng "(\"cat\",\"chat\")" |> tEvent' 110 80
       ] ]
 
 
@@ -224,7 +235,8 @@ frames =
       , subBullet "Asynchrony"
       , bullet "Elm, a practical language for purely functional GUIs"
       , subBullet "Designed for FRP and graphics"
-      , subBullet "This presentation is an Elm program!"
+      , SubBullet <| toText "This presentation is an Elm program!\n" ++
+                  Text.link "/" (toText "github.com/evancz/elm-at-pldi-2013")
       ]
     , [ title "Elm"
       , subTitle "A practical language for purely functional GUIs"
@@ -331,22 +343,146 @@ translations = lift2 (,) words (lift toFrench words)
 lift2 display positions translations
 ```
 |]
-      , Anything <|
-          collage 900 400
-            [ scale 0.8 . move (0-200,0) . toForm <| image 381 465 "images/sync.png"
-            , helpAt (140,100) . toForm <| syncHelp ]
+      , let img = collage 900 400
+                  [ scale 0.8 . move (0-200,0) . toForm <| image 381 465 "images/sync.png"
+                  , helpAt (140,100) . toForm <| syncHelp ]
+        in  Animated img <|
+                [ [ NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (110) -- 6
+                  , NoChange |> mEvent (140-300) (280-300) --7
+                  , NoChange |> mEvent (90-300) (194-300) --8
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (90-300) (194-300)
+                  , NoChange |> mEvent (130-300) (150-300) --17
+                  , NoChange |> mEvent (120-300) (120-300) --18
+                  , Change "?" |> mEvent (0-230) (0-210) -- 19
+                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                  ]
+                , [ NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (110) --6
+                  , NoChange |> mEvent (140-300) (280-300) --7
+                  , NoChange |> mEvent (200-300) (250-300) --8
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (200-300) (250-300)
+                  , NoChange |> mEvent (210-300) (170-300) --16
+                  , NoChange |> mEvent (130-300) (150-300) --17
+                  , NoChange |> mEvent (120-300) (120-300) --18
+                  , Change "?" |> mEvent (0-230) (0-210) -- 19
+                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                  ]
+                , [ Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (110) -- active 6
+                  , Change "(3,4)" |> mEvent (0-310) (0-35) -- active 7
+                  , Change "(3,4)" |> mEvent (0-310) (0-100) -- active 8
+                  , Change "<Element>" |> mEvent (0-300) (0-170) -- active 9
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "<Element>" |> mEvent (0-300) (0-170)
+                  , Change "?" |> mEvent (0-230) (0-210) -- 19
+                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                  ]
+                , [ NoChange |> tEvent (0-240) (110)
+                  , NoChange |> tEvent (0-310) (0-35)  -- active 2
+                  , NoChange |> tEvent (0-310) (0-100) -- active 3
+                  , NoChange |> tEvent (0-290) (0-180) -- active 4
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , NoChange |> tEvent (0-290) (0-180)
+                  , Change "?" |> tEvent (0-230) (0-210) --13
+                  , Change "<Element>" |> tEvent (0-230) (0-280) --14
+                  , Change "<Element>" |> tEvent (0-230) (0-400) --15
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  ]
+                , [ Change "\"cat\"" |> tEvent (0-240) (110)
+                  , Change "\"cat\"" |> tEvent (140-300) (280-300) -- active 2
+                  , Change "\"cat\"" |> tEvent (140-300) (280-300)
+                  , Change "\"cat\"" |> tEvent (140-300) (280-300)
+                  , Change "\"cat\"" |> tEvent (90-300) (184-300)  -- active 5
+                  , Change "\"cat\"" |> tEvent (90-300) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-300) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-300) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-300) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-300) (184-300)
+                  , Change "?" |> tEvent (130-300) (150-300) --11
+                  , Change "(\"cat\",\"chat\")" |> tEvent (190-300) (120-300) --12
+                  , Change "?" |> tEvent (0-230) (0-210) --13
+                  , Change "<Element>" |> tEvent (0-230) (0-280) --14
+                  , Change "<Element>" |> tEvent (0-230) (0-400) --15
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  ]
+                , [ Change "\"cat\"" |> tEvent (0-240) (110)
+                  , Change "\"cat\"" |> tEvent (140-300) (280-300) -- active 2
+                  , Change "\"cat\"" |> tEvent (140-300) (280-300)
+                  , Change "\"cat\"" |> tEvent (140-300) (280-300)
+                  , Change "\"cat\"" |> tEvent (200-300) (240-300) -- active 5
+                  , Change "\"cat\"" |> tEvent (200-300) (240-300)
+                  , Change "\"cat\"" |> tEvent (200-300) (240-300)
+                  , Change "\"cat\"" |> tEvent (200-300) (240-300)
+                  , Change "\"cat\"" |> tEvent (200-300) (240-300)
+                  , Change "\"chat\"" |> tEvent (210-300) (170-300) --10
+                  , Change "?" |> tEvent (130-300) (150-300) --11
+                  , Change "(\"cat\",\"chat\")" |> tEvent (190-300) (120-300) --12
+                  , Change "?" |> tEvent (0-230) (0-210) --13
+                  , Change "<Element>" |> tEvent (0-230) (0-280) --14
+                  , Change "<Element>" |> tEvent (0-230) (0-400) --15
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  , Change "<Element>" |> tEvent (0-230) (0-400)
+                  ]
+                ]
       ]
 
     , [ title "Asynchrony"
       , Anything myAsync
       , Anything <| center [markdown|```haskell
-positions            async positions
+translations            async translations
 ```
-|]
-      , Anything <| collage 900 330
-                     [ move (0-200,0) . toForm <| image 212 323 "images/positions.png"
-                     , move (200,0) . toForm <| image 205 291 "images/asyncPositions.png"
-                     ]
+|] `above` collage 900 280
+   [ scale 0.7 . toForm <| image 1015 271 "images/asyncExample.png" ]
       ]
 
     , [ title "Asynchrony"
@@ -357,11 +493,133 @@ lift2 display positions (async translations)
       , let img = collage 900 400
                   [ scale 0.8 . toForm <| image 525 451 "images/async.png" ]
         in  Animated img <|
-                map delayEvent (translationEvents False mEvent (0-80) 455 (0-20) (0-185))
-                ++ [ positionEvents True mEvent (0-200) 0
-                   , tail <| positionEvents False tEvent (0-200) 0
-                   ] ++ translationEvents True tEvent (0-80) 465 (0-20) (0-195)
-                 
+                [ [ NoChange |> mEvent (60-260) (400)
+                  , NoChange |> mEvent (60-260) (400)
+                  , NoChange |> mEvent (60-260) (400)
+                  , NoChange |> mEvent (60-260) (400)
+                  , NoChange |> mEvent (60-260) (400)
+                  , NoChange |> mEvent (60-260) (110) -- 6
+                  , NoChange |> mEvent (140-260) (280-300) --7
+                  , NoChange |> mEvent (90-260) (194-300) --8
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (90-260) (194-300)
+                  , NoChange |> mEvent (130-260) (150-300) --17
+                  , NoChange |> mEvent (120-260) (120-300) --18
+                  , Change "?" |> mEvent (0-230) (0-210) -- 19
+                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                  ]
+                , [ NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (400)
+                  , NoChange |> mEvent (0-240) (110) --6
+                  , NoChange |> mEvent (140-260) (280-300) --7
+                  , NoChange |> mEvent (200-260) (250-300) --8
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (200-260) (250-300)
+                  , NoChange |> mEvent (210-260) (170-300) --16
+                  , NoChange |> mEvent (130-260) (150-300) --17
+                  , NoChange |> mEvent (120-260) (120-300) --18
+                  , Change "?" |> mEvent (0-230) (0-210) -- 19
+                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                  ]
+                , [ Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (400)
+                  , Change "(3,4)" |> mEvent (0-240) (110) -- active 6
+                  , Change "(3,4)" |> mEvent (0-310) (0-35) -- active 7
+                  , Change "(3,4)" |> mEvent (0-310) (0-100) -- active 8
+                  , Change "<Element>" |> mEvent (0-260) (0-170) -- active 9
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "<Element>" |> mEvent (0-260) (0-170)
+                  , Change "?" |> mEvent (0-230) (0-210) -- 19
+                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                  ]
+                , [ NoChange |> tEvent (0-140) (110)
+                  , NoChange |> tEvent (0-210) (0-35)  -- active 2
+                  , NoChange |> tEvent (0-210) (0-100) -- active 3
+                  , NoChange |> tEvent (0-190) (0-180) -- active 4
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , NoChange |> tEvent (0-190) (0-180)
+                  , Change "?" |> tEvent (0-130) (0-210) --13
+                  , Change "<Element>" |> tEvent (0-130) (0-280) --14
+                  , Change "<Element>" |> tEvent (0-130) (0-400) --15
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  ]
+                , [ Change "\"cat\"" |> tEvent (0-140) (110)
+                  , Change "\"cat\"" |> tEvent (140-200) (280-300) -- active 2
+                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
+                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
+                  , Change "\"cat\"" |> tEvent (90-200) (184-300)  -- active 5
+                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
+                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
+                  , Change "?" |> tEvent (130-200) (150-300) --11
+                  , Change "(\"cat\",\"chat\")" |> tEvent (190-200) (120-300) --12
+                  , Change "?" |> tEvent (0-130) (0-210) --13
+                  , Change "<Element>" |> tEvent (0-130) (0-280) --14
+                  , Change "<Element>" |> tEvent (0-130) (0-400) --15
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  ]
+                , [ Change "\"cat\"" |> tEvent (0-140) (110)
+                  , Change "\"cat\"" |> tEvent (140-200) (280-300) -- active 2
+                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
+                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
+                  , Change "\"cat\"" |> tEvent (200-200) (240-300) -- active 5
+                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
+                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
+                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
+                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
+                  , Change "\"chat\"" |> tEvent (210-200) (170-300) --10
+                  , Change "?" |> tEvent (130-200) (150-300) --11
+                  , Change "(\"cat\",\"chat\")" |> tEvent (190-200) (120-300) --12
+                  , Change "?" |> tEvent (0-130) (0-210) --13
+                  , Change "<Element>" |> tEvent (0-130) (0-280) --14
+                  , Change "<Element>" |> tEvent (0-130) (0-400) --15
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                  ]
+                ]
       ]
 
     , [ title "Signals"
@@ -372,7 +630,7 @@ lift2 display positions (async translations)
 
     , [ title "Related Work"
       , bullet "Pure FRP"
-      , subBullet "Monadic FRP [Elliott and Hudak '97]\nParallel FRP [Peterson, Trifonov, Serjantov, '00]\nReal-Time FRP [Wan, Taha, Hudak, '01 '02]"
+      , subBullet "Monadic FRP [Elliott and Hudak '97]\nParallel FRP [Peterson, Trifonov, Serjantov, '00]\nReal-Time FRP [Wan, Taha, Hudak, '01 '02]\nArrowized FRP [Liu, Cheng, Hudak, '07 '09; Courtney, Nilsson, Peterson, '02 '03 '05]"
       , bullet "Imperative FRP"
       , subBullet "FrTime [Cooper, Krishnamurthi, '06]\nFlapjax [Meyerovich, Guha, Baskin, Cooper, Greenberg, Bromfield, Krishnamurthi, '09]"
       , bullet "Self Adjusting Computation [Acar et al. '02]"
@@ -381,7 +639,7 @@ lift2 display positions (async translations)
 
     , [ title "Relative Expressiveness"
       , bullet "Monadic FRP [Elliott and Hudak '97]"
-      , subBullet "Has prohibative performance problems in pure languages"
+      , subBullet "Has serious performance problems in pure languages"
       , subBullet "Not allowed in Elm"
       , bullet "Arrowized FRP"
       , subBullet "Efficiently allows dynamic switching and dynamic collections\n[Liu, Cheng, Hudak, '07 '09; Courtney, Nilsson, Peterson, '02 '03 '05]"
@@ -396,7 +654,7 @@ lift2 display positions (async translations)
       , subTitle "Evaluation strategies, types, and concurrency"
       ]
 
-    , [ title "Evaluation"
+    , [ title "Evaluation Strategies"
       , bullet "Eager evaluation by default"
       , bullet "Compile to a two-tiered intermediate language"
       , subBullet "Influenced by Real-Time FRP, which proved efficiency bounds\n[Wan, Taha, Hudak, '01 '02]"
@@ -435,11 +693,12 @@ lift2 display positions (async translations)
       , bullet "Key Contributions:"
       , subBullet "Simple and efficient semantics for FRP"
       , subBullet "Elm, a practical language for purely functional GUIs"
+      , subTitle "\n\nThank you!"
       ]
 
     ]
 
-{--
+{--}
 showAllEvents frame =
     let eventsIn frame = case frame of
                            Animated _ events :: _ -> events
@@ -463,7 +722,7 @@ scene w clicks pos =
 
 main = scene <~ Window.width ~ count Mouse.clicks ~ Mouse.position
 --}
-{--}
+{--
 steps =
     let zipN xss = foldr (zipWith (++)) (map (\_ -> []) [1 .. maximum (map length xss)]) (map (map (\xs -> [xs])) xss)
         pathify events = case events of
@@ -526,14 +785,17 @@ scene (w,h) clicks pos (i,j,_,events) fraction =
                                                             Nothing -> []
                                                             Just es -> es)
 
+state : Signal (Int,Int)
 state = foldp step (0,1) input
 
 index = lift (\(i,_) -> steps # i) state
 
+position : Signal (Int,Int)
 position =
     let isMouse (_,_,b,_) = b
     in  keepWhen (isMouse <~ index) (0,0) Mouse.position
 
+clickCount : Signal Int
 clickCount =
     dropRepeats <|
     foldp (\evt c -> case evt of
