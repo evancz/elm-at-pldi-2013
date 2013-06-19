@@ -57,8 +57,13 @@ mEvent = Event myYellow
 tEvent : Int -> Int -> Change -> Event
 tEvent = Event myPink
 
+aEvent : Int -> Int -> Change -> Event
+aEvent = Event myGreen
+
 myGrey : Color
 myGrey = rgb 80 80 80
+
+repeat n v = map (\_ -> v) [1..n]
 
 showEventHelp fraction {color,x,y,sx,sy,value,svalue} =
     let x' = sx + (x-sx) * fraction
@@ -493,131 +498,106 @@ lift2 display positions (async translations)
       , let img = collage 900 400
                   [ scale 0.8 . toForm <| image 525 451 "images/async.png" ]
         in  Animated img <|
-                [ [ NoChange |> mEvent (60-260) (400)
-                  , NoChange |> mEvent (60-260) (400)
-                  , NoChange |> mEvent (60-260) (400)
-                  , NoChange |> mEvent (60-260) (400)
-                  , NoChange |> mEvent (60-260) (400)
-                  , NoChange |> mEvent (60-260) (110) -- 6
-                  , NoChange |> mEvent (140-260) (280-300) --7
-                  , NoChange |> mEvent (90-260) (194-300) --8
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (90-260) (194-300)
-                  , NoChange |> mEvent (130-260) (150-300) --17
-                  , NoChange |> mEvent (120-260) (120-300) --18
-                  , Change "?" |> mEvent (0-230) (0-210) -- 19
-                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                [ repeat 8 (mEvent (130-240) (400) NoChange) ++
+                  [ NoChange |> mEvent (130-240) (90) --9
+                  , NoChange |> mEvent (80) (285-200)
+                  ] ++ repeat 7 (NoChange |> mEvent (60) (0)) ++
+                  [ NoChange |> mEvent (100) (125-200) --18
+                  ] ++ repeat 30 (NoChange |> mEvent (130-240) (40)) --19
+                , repeat 8 (mEvent (130-240) (400) NoChange) ++
+                  [ NoChange |> mEvent (130-240) (90) --9
+                  , NoChange |> mEvent (80) (285-200)
+                  ] ++ repeat 6 (NoChange |> mEvent (150) (250-200)) ++
+                  [ NoChange |> mEvent (140) (180-200) --17
+                  , NoChange |> mEvent (100) (125-200) --18
+                  ] ++ repeat 30 (NoChange |> mEvent (130-240) (40)) --19
+                , repeat 8 (mEvent (130-240) (400) NoChange) ++
+                  [ NoChange |> mEvent (130-240) (90) --9
+                  , NoChange |> mEvent (150-200) (200-300)
+                  , NoChange |> mEvent (150-200) (120-300)
+                  , NoChange |> mEvent (150-200) (120-300)
+                  , Change "?" |> mEvent (200-300) (0-210)
+                  ] ++ repeat 30 (Change "<Element>" |> mEvent (200-300) (0-320)) --13
+                , repeat 8 (mEvent (130-240) (400) <| Change "(3,4)") ++
+                  [ Change "(3,4)" |> mEvent (130-240) (90) --9
+                  , Change "(3,4)" |> mEvent (110-310) (0-35)
+                  , Change "(3,4)" |> mEvent (110-310) (0-100)
+                  , Change "<Element>" |> mEvent (110-300) (0-170)
+                  , Change "?" |> mEvent (200-300) (0-210)
+                  ] ++ repeat 30 (Change "<Element>" |> mEvent (200-300) (0-320)) --13
+                , [ NoChange |> tEvent (130-240) (400) --1
+                  , NoChange |> tEvent (130-240) (90) --2
+                  , NoChange |> tEvent (110-310) (0-35) --3
+                  , NoChange |> tEvent (110-310) (0-100) --4
+                  , NoChange |> tEvent (130-300) (0-170) --5
+                  , NoChange |> tEvent (200-300) (0-210) --6
+                  , NoChange |> tEvent (200-300) (0-400) --7
+                  ] ++ repeat 30 (NoChange |> tEvent (200-300) (0-400))
+                , [ NoChange |> tEvent (130-240) (400) --1
+                  , NoChange |> tEvent (130-240) (90) --2
+                  , NoChange |> tEvent (150-200) (200-300) --3
+                  , NoChange |> tEvent (150-200) (120-300) --4
+                  , NoChange |> tEvent (150-200) (120-300)
+                  , NoChange |> tEvent (200-300) (0-210) --6
+                  , NoChange |> tEvent (200-300) (0-400) --7
+                  ] ++ repeat 30 (NoChange |> tEvent (200-300) (0-400))
+                , [ Change "\"cat\"" |> tEvent (130-240) (400) --1
+                  , Change "\"cat\"" |> tEvent (130-240) (90) --2
+                  , Change "\"cat\"" |> tEvent (80) (285-200) --3
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  ] ++ repeat 7 (Change "\"cat\"" |> tEvent (50) (185-200)) ++ --8
+                  [ Change "\"cat\"" |> tEvent (50) (185-200) --20
+                  , Change "(\"cat\",\"chat\")" |> tEvent (100) (125-200)
+                  , Change "(\"cat\",\"chat\")" |> tEvent (130-240) (40) --22
+                  ] ++ repeat 30 (NoChange |> tEvent (130-240) (40))
+                , [ Change "\"cat\"" |> tEvent (130-240) (400) --1
+                  , Change "\"cat\"" |> tEvent (130-240) (90) --2
+                  , Change "\"cat\"" |> tEvent (80) (285-200) --3
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  , Change "\"cat\"" |> tEvent (80) (285-200)
+                  ] ++ repeat 7 (Change "\"cat\"" |> tEvent (150) (240-200)) ++ --8
+                  [ Change "\"chat\"" |> tEvent (140) (180-200) --20
+                  , Change "(\"cat\",\"chat\")" |> tEvent (100) (125-200)
+                  , Change "(\"cat\",\"chat\")" |> tEvent (130-240) (40) --22
+                  ] ++ repeat 30 (NoChange |> tEvent (130-240) (40))
+                , repeat 19 (NoChange |> aEvent (130-240) (400)) ++
+                  [ NoChange |> aEvent (130-240) (90)
+                  , NoChange |> aEvent (110-310) (0-35)
+                  , NoChange |> aEvent (110-310) (0-100)
+                  , NoChange |> aEvent (130-300) (0-170)
+                  , Change "?"         |> aEvent (200-300) (0-210)
+                  , Change "<Element>" |> aEvent (200-300) (0-280)
+                  , Change "<Element>" |> aEvent (200-300) (0-400)
                   ]
-                , [ NoChange |> mEvent (0-240) (400)
-                  , NoChange |> mEvent (0-240) (400)
-                  , NoChange |> mEvent (0-240) (400)
-                  , NoChange |> mEvent (0-240) (400)
-                  , NoChange |> mEvent (0-240) (400)
-                  , NoChange |> mEvent (0-240) (110) --6
-                  , NoChange |> mEvent (140-260) (280-300) --7
-                  , NoChange |> mEvent (200-260) (250-300) --8
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (200-260) (250-300)
-                  , NoChange |> mEvent (210-260) (170-300) --16
-                  , NoChange |> mEvent (130-260) (150-300) --17
-                  , NoChange |> mEvent (120-260) (120-300) --18
-                  , Change "?" |> mEvent (0-230) (0-210) -- 19
-                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                , repeat 19 (NoChange |> aEvent (130-240) (400)) ++
+                  [ NoChange |> aEvent (130-240) (90)
+                  , NoChange |> aEvent (80) (285-200)
+                  , NoChange |> aEvent (60) (190-200)
+                  , NoChange |> aEvent (60) (190-200)
+                  , NoChange |> aEvent (100) (125-200)
+                  , NoChange |> aEvent (130-240) (50)
                   ]
-                , [ Change "(3,4)" |> mEvent (0-240) (400)
-                  , Change "(3,4)" |> mEvent (0-240) (400)
-                  , Change "(3,4)" |> mEvent (0-240) (400)
-                  , Change "(3,4)" |> mEvent (0-240) (400)
-                  , Change "(3,4)" |> mEvent (0-240) (400)
-                  , Change "(3,4)" |> mEvent (0-240) (110) -- active 6
-                  , Change "(3,4)" |> mEvent (0-310) (0-35) -- active 7
-                  , Change "(3,4)" |> mEvent (0-310) (0-100) -- active 8
-                  , Change "<Element>" |> mEvent (0-260) (0-170) -- active 9
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "<Element>" |> mEvent (0-260) (0-170)
-                  , Change "?" |> mEvent (0-230) (0-210) -- 19
-                  , Change "<Element>" |> mEvent (0-230) (0-280) --20
+                , repeat 19 (NoChange |> aEvent (130-240) (400)) ++
+                  [ NoChange |> aEvent (130-240) (90)
+                  , NoChange |> aEvent (80) (285-200)
+                  , NoChange |> aEvent (150) (240-200)
+                  , NoChange |> aEvent (140) (180-200)
+                  , NoChange |> aEvent (100) (125-200)
+                  , NoChange |> aEvent (130-240) (50)
                   ]
-                , [ NoChange |> tEvent (0-140) (110)
-                  , NoChange |> tEvent (0-210) (0-35)  -- active 2
-                  , NoChange |> tEvent (0-210) (0-100) -- active 3
-                  , NoChange |> tEvent (0-190) (0-180) -- active 4
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , NoChange |> tEvent (0-190) (0-180)
-                  , Change "?" |> tEvent (0-130) (0-210) --13
-                  , Change "<Element>" |> tEvent (0-130) (0-280) --14
-                  , Change "<Element>" |> tEvent (0-130) (0-400) --15
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  ]
-                , [ Change "\"cat\"" |> tEvent (0-140) (110)
-                  , Change "\"cat\"" |> tEvent (140-200) (280-300) -- active 2
-                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
-                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
-                  , Change "\"cat\"" |> tEvent (90-200) (184-300)  -- active 5
-                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
-                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
-                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
-                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
-                  , Change "\"cat\"" |> tEvent (90-200) (184-300)
-                  , Change "?" |> tEvent (130-200) (150-300) --11
-                  , Change "(\"cat\",\"chat\")" |> tEvent (190-200) (120-300) --12
-                  , Change "?" |> tEvent (0-130) (0-210) --13
-                  , Change "<Element>" |> tEvent (0-130) (0-280) --14
-                  , Change "<Element>" |> tEvent (0-130) (0-400) --15
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  ]
-                , [ Change "\"cat\"" |> tEvent (0-140) (110)
-                  , Change "\"cat\"" |> tEvent (140-200) (280-300) -- active 2
-                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
-                  , Change "\"cat\"" |> tEvent (140-200) (280-300)
-                  , Change "\"cat\"" |> tEvent (200-200) (240-300) -- active 5
-                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
-                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
-                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
-                  , Change "\"cat\"" |> tEvent (200-200) (240-300)
-                  , Change "\"chat\"" |> tEvent (210-200) (170-300) --10
-                  , Change "?" |> tEvent (130-200) (150-300) --11
-                  , Change "(\"cat\",\"chat\")" |> tEvent (190-200) (120-300) --12
-                  , Change "?" |> tEvent (0-130) (0-210) --13
-                  , Change "<Element>" |> tEvent (0-130) (0-280) --14
-                  , Change "<Element>" |> tEvent (0-130) (0-400) --15
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
-                  , Change "<Element>" |> tEvent (0-130) (0-400)
+                , repeat 19 (NoChange |> aEvent (130-240) (400)) ++
+                  [ Change "(\"cat\",\"chat\")" |> aEvent (130-240) (90)
+                  , Change "(\"cat\",\"chat\")" |> aEvent (150-200) (200-300)
+                  , Change "(\"cat\",\"chat\")" |> aEvent (150-200) (120-300)
+                  , Change "(\"cat\",\"chat\")" |> aEvent (150-200) (120-300)
+                  , Change "?"         |> aEvent (200-300) (0-210)
+                  , Change "<Element>" |> aEvent (200-300) (0-280)
+                  , Change "<Element>" |> aEvent (200-300) (0-400)
                   ]
                 ]
       ]
@@ -698,7 +678,7 @@ lift2 display positions (async translations)
 
     ]
 
-{--}
+{--
 showAllEvents frame =
     let eventsIn frame = case frame of
                            Animated _ events :: _ -> events
@@ -722,7 +702,7 @@ scene w clicks pos =
 
 main = scene <~ Window.width ~ count Mouse.clicks ~ Mouse.position
 --}
-{--
+{--}
 steps =
     let zipN xss = foldr (zipWith (++)) (map (\_ -> []) [1 .. maximum (map length xss)]) (map (map (\xs -> [xs])) xss)
         pathify events = case events of
