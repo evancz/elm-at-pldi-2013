@@ -71,9 +71,9 @@ showEventHelp fraction {color,x,y,sx,sy,value,svalue} =
     in
     case if fraction < 0.6 then svalue else value of
       Change v ->
-          let name = text . Text.color myBlue' . Text.height 1.5 . monospace <| toText v
+          let name = text . Text.color myBlue' . Text.height 24 . monospace <| toText v
               line = { defaultLine | color <- color, width <- 2 }
-              box = rect (widthOf name + 4) (heightOf name - 2)
+              box = rect (toFloat (widthOf name) + 4) (toFloat (heightOf name) - 2)
           in  [ move (x',y') <| filled white box
               , move (x',y') <| outlined line box
               , move (x',y'+3) <| toForm name ]
@@ -82,14 +82,14 @@ showEventHelp fraction {color,x,y,sx,sy,value,svalue} =
 showPart : Int -> (Int,Int) -> Part -> Element
 showPart clicks (x,y) part =
     case part of
-      SuperTitle str -> spacer 900 250 `above` txt 900 Center 4 myBlue str
-      Title str -> spacer 900 20 `above` txt 900 Center 3.2 myBlue str
-      SubTitle str -> spacer 900 10 `above` txt 900 Center 2 myGrey str
-      Bullet str -> txt 900 (Offset 20) 2 myGrey str
-      SubBullet str -> txt 900 (Offset 60) 1.7 myGrey str
+      SuperTitle str -> spacer 900 250 `above` txt 900 Center 64 myBlue str
+      Title str -> spacer 900 20 `above` txt 900 Center 50 myBlue str
+      SubTitle str -> spacer 900 10 `above` txt 900 Center 32 myGrey str
+      Bullet str -> txt 900 (Offset 20) 32 myGrey str
+      SubBullet str -> txt 900 (Offset 60) 26 myGrey str
       Anything elem -> elem
       Mouse f -> f x y
-      ClickCount -> txt 900 Center 8 myBlue' . monospace . toText <| show clicks
+      ClickCount -> txt 900 Center 128 myBlue' . monospace . toText <| show clicks
       Animated e events -> e
       _ -> asText 42
 
@@ -103,7 +103,7 @@ Asynchronous<br>Functional Reactive Programming<br>
 titlePage : Element
 titlePage = 
     let style hght = txt (900 `div` 2) Center hght myGrey . toText
-        author name affl = flow down [ style 2.2 name, style 1.8 affl ]
+        author name affl = flow down [ style 36 name, style 28 affl ]
     in flow down [ spacer 900 130,
                    container 900 (heightOf paperTitle) middle paperTitle,
                    spacer 900 100,
@@ -272,11 +272,11 @@ frames =
                      monospace (toText "Mouse.position") ++
                      toText " is updated automatically"
       , let t clr = Text.color clr . toText
-        in  Mouse (\x y -> container 900 140 middle . text . monospace . typeface "inconsolata" . Text.height 2 <| concat [ t myBlue  "("
-                                                                                                                          , t myBlue' (show x)
-                                                                                                                          , t myBlue  ","
-                                                                                                                          , t myBlue' (show y)
-                                                                                                                          , t myBlue  ")" ])
+        in  Mouse (\x y -> container 900 140 middle . text . monospace . typeface "inconsolata" . Text.height 32 <| concat [ t myBlue  "("
+                                                                                                                           , t myBlue' (show x)
+                                                                                                                           , t myBlue  ","
+                                                                                                                           , t myBlue' (show y)
+                                                                                                                           , t myBlue  ")" ])
       ]
 
     , [ title "Signals"
@@ -709,7 +709,7 @@ steps =
                            [] -> []
                            h::t -> let start = { h| y <- h.y + 400 }
                                        extend {x,y,value} e =
-                                           { color = e.color, x = e.x, y = e.y, value = e.value, sx = x, sy = y, svalue = value }
+                                           { color = e.color, x = toFloat e.x, y = toFloat e.y, value = e.value, sx = toFloat x, sy = toFloat y, svalue = value }
                                    in  zipWith extend (start :: start :: events) (start :: events)
         g i frame j = case frame of
                         Animated e events -> map ((,,,) i j False . Just) (zipN (map pathify events))
@@ -739,14 +739,14 @@ step event (index, fraction) =
 (#) : [a] -> Int -> a
 xs # i = case xs of
            h::t -> if i == 0 then h else t # (i-1)
-           [] -> []
 
 showFrame w h clicks pos showing fading fraction events =
-    let lastShow = map (Graphics.Element.opacity fraction . showPart clicks pos) fading
+    let lastShow = map (opacity fraction . showPart clicks pos) fading
         frame = container 900 600 topLeft . flow down <| map (showPart clicks pos) showing ++ lastShow
         overlay = collage 900 600 <| concatMap (showEventHelp fraction) events
-        setScale = scale (min (toFloat w / 900) (toFloat h / 600))
-    in  collage w h <| [ rect w h |> filled (rgb 245 245 245)
+        (w',h') = (toFloat w, toFloat h)
+        setScale = scale (min (w' / 900) (h' / 600))
+    in  collage w h <| [ rect w' h' |> filled (rgb 245 245 245)
                        , setScale (toForm overlay)
                        , setScale (toForm frame)
                        ]
@@ -765,15 +765,15 @@ scene (w,h) clicks pos (i,j,_,events) fraction =
                                                             Nothing -> []
                                                             Just es -> es)
 
-state : Signal (Int,Int)
+state : Signal (Int,Float)
 state = foldp step (0,1) input
 
-index = lift (\(i,_) -> steps # i) state
+index = lift ((#) steps . fst) state
 
-position : Signal (Int,Int)
-position =
-    let isMouse (_,_,b,_) = b
-    in  keepWhen (isMouse <~ index) (0,0) Mouse.position
+--position : Signal (Int,Int)
+--position =
+--    let isMouse (_,_,b,_) = b
+--    in  keepWhen (isMouse <~ index) (0,0) Mouse.position
 
 clickCount : Signal Int
 clickCount =
@@ -782,5 +782,11 @@ clickCount =
                        Nothing -> 0
                        Just _ -> c + 1) 0 (merges [(\_ -> Nothing) <~ Keyboard.arrows, Just <~ Mouse.clicks])
 
-main = scene <~ Window.dimensions ~ clickCount ~ position ~ index ~ (snd <~ state)
+--main = asText <~ index
+{--}
+main = scene <~ Window.dimensions
+              ~ clickCount
+              ~ constant (0,0) --Mouse.position
+              ~ index
+              ~ (snd <~ state)
 --}
