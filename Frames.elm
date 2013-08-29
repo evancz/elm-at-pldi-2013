@@ -82,7 +82,7 @@ showEventHelp fraction {color,x,y,sx,sy,value,svalue} =
 showPart : Int -> (Int,Int) -> Part -> Element
 showPart clicks (x,y) part =
     case part of
-      SuperTitle str -> spacer 900 250 `above` txt 900 Center 64 myBlue str
+      SuperTitle str -> spacer 900 250 `above` txt 900 Center 56 myBlue str
       Title str -> spacer 900 20 `above` txt 900 Center 50 myBlue str
       SubTitle str -> spacer 900 10 `above` txt 900 Center 32 myGrey str
       Bullet str -> txt 900 (Offset 20) 32 myGrey str
@@ -91,10 +91,10 @@ showPart clicks (x,y) part =
       Mouse f -> f x y
       ClickCount -> txt 900 Center 128 myBlue' . monospace . toText <| show clicks
       Animated e events -> e
-      _ -> asText 42
+      _ -> asText part
 
 paperTitle = [markdown|
-<span style="font-size:4em; color: rgb(96,181,204);">
+<span style="font-size:3.5em; color: rgb(96,181,204);">
 Asynchronous<br>Functional Reactive Programming<br>
 <span style="float:right;">for GUIs</span>
 </span>
@@ -664,7 +664,7 @@ lift2 display positions (async translations)
       , subBullet "Cross-platform graphics support is weak"
       ]
 
-    , [ Anything [markdown|<iframe src="http://localhost:8000/edit/examples/Intermediate/Mario.elm" width=900 height=600 style="border:none;"></iframe>|]
+    , [ Anything [markdown|<iframe src="http://elm-lang.org/edit/examples/Intermediate/Mario.elm" width=900 height=600 style="border:none;"></iframe>|]
       ]
 
     , [ title "Wrap Up"
@@ -679,7 +679,7 @@ lift2 display positions (async translations)
     ]
 
 {--
-showAllEvents frame =
+{--showAllEvents frame =
     let eventsIn frame = case frame of
                            Animated _ events :: _ -> events
                            _ :: tl -> eventsIn tl
@@ -687,10 +687,10 @@ showAllEvents frame =
         showEventHelp' {x,y,color,value} =
             showEventHelp 1 { color=color, x=x, y=y, value=value, sx=x, sy=y, svalue=value }
     in  collage 900 600 <| concatMap (concatMap showEventHelp') (eventsIn frame)
-
+--}
 showFrame clicks pos frame =
     layers [ spacer 900 600 |> color (rgb 245 245 245)
-           , showAllEvents frame
+--           , showAllEvents frame
            , flow down <| map (showPart clicks pos) frame ]
 
 allFrames clicks pos =
@@ -700,7 +700,7 @@ scene w clicks pos =
     let elem = allFrames clicks pos
     in  container w (heightOf elem) middle elem
 
-main = scene <~ Window.width ~ count Mouse.clicks ~ Mouse.position
+main = scene 1000 5 (100,100) -- <~ Window.width ~ count Mouse.clicks ~ Mouse.position
 --}
 {--}
 steps =
@@ -757,10 +757,9 @@ scene (w,h) clicks pos (i,j,_,events) fraction =
                               Just _ -> True
                               _ -> False)
         showing = take (if noFade then j+1 else j) frame
-        fading = if noFade then [] else
-                     (case drop j frame of
-                        h::t -> [h]
-                        [] -> [])
+        fading = if noFade then [] else case drop j frame of
+                                          hd::tl -> [hd]
+                                          [] -> []
     in  showFrame w h clicks pos showing fading fraction (case events of
                                                             Nothing -> []
                                                             Just es -> es)
@@ -768,7 +767,7 @@ scene (w,h) clicks pos (i,j,_,events) fraction =
 state : Signal (Int,Float)
 state = foldp step (0,1) input
 
-index = lift ((#) steps . fst) state
+index = lift (\(i,_) -> steps # i) state
 
 --position : Signal (Int,Int)
 --position =
@@ -782,7 +781,7 @@ clickCount =
                        Nothing -> 0
                        Just _ -> c + 1) 0 (merges [(\_ -> Nothing) <~ Keyboard.arrows, Just <~ Mouse.clicks])
 
---main = asText <~ index
+--main = flow down <| map asText steps
 {--}
 main = scene <~ Window.dimensions
               ~ clickCount
