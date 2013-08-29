@@ -14,7 +14,7 @@ data Part
     | Bullet Text
     | SubBullet Text
     | Anything Element
-    | Mouse (Int -> Int -> Element)
+    | MousePart (Int -> Int -> Element)
     | ClickCount
     | Animated Element [[Event]]
 
@@ -88,7 +88,7 @@ showPart clicks (x,y) part =
       Bullet str -> txt 900 (Offset 20) 32 myGrey str
       SubBullet str -> txt 900 (Offset 60) 26 myGrey str
       Anything elem -> elem
-      Mouse f -> f x y
+      MousePart f -> f x y
       ClickCount -> txt 900 Center 128 myBlue' . monospace . toText <| show clicks
       Animated e events -> e
       _ -> asText part
@@ -272,11 +272,11 @@ frames =
                      monospace (toText "Mouse.position") ++
                      toText " is updated automatically"
       , let t clr = Text.color clr . toText
-        in  Mouse (\x y -> container 900 140 middle . text . monospace . typeface "inconsolata" . Text.height 32 <| concat [ t myBlue  "("
-                                                                                                                           , t myBlue' (show x)
-                                                                                                                           , t myBlue  ","
-                                                                                                                           , t myBlue' (show y)
-                                                                                                                           , t myBlue  ")" ])
+        in  MousePart (\x y -> container 900 140 middle . text . monospace . typeface "inconsolata" . Text.height 32 <| concat [ t myBlue  "("
+                                                                                                                               , t myBlue' (show x)
+                                                                                                                               , t myBlue  ","
+                                                                                                                               , t myBlue' (show y)
+                                                                                                                               , t myBlue  ")" ])
       ]
 
     , [ title "Signals"
@@ -289,7 +289,7 @@ frames =
 
     , [ title "Transforming Signals"
       , Anything myLift1
-      , Mouse shapes
+      , MousePart shapes
       ]
 
     , [ title "Stateful Signals"
@@ -713,7 +713,7 @@ steps =
                                    in  zipWith extend (start :: start :: events) (start :: events)
         g i frame j = case frame of
                         Animated e events -> map ((,,,) i j False . Just) (zipN (map pathify events))
-                        Mouse _ -> [(i, j, True, Nothing)]
+                        MousePart _ -> [(i, j, True, Nothing)]
                         _ -> [(i, j, False, Nothing)]
         f frame i = concat <| zipWith (g i) frame [0..length frame - 1]
     in  concat <| zipWith f frames [0 .. length frames]
@@ -769,10 +769,11 @@ state = foldp step (0,1) input
 
 index = lift (\(i,_) -> steps # i) state
 
---position : Signal (Int,Int)
---position =
---    let isMouse (_,_,b,_) = b
---    in  keepWhen (isMouse <~ index) (0,0) Mouse.position
+position : Signal (Int,Int)
+position =
+    let isMouse (_,_,b,_) = b
+        needed = isMouse <~ index
+    in  keepWhen needed (0,0) Mouse.position
 
 clickCount : Signal Int
 clickCount =
@@ -785,7 +786,7 @@ clickCount =
 {--}
 main = scene <~ Window.dimensions
               ~ clickCount
-              ~ constant (0,0) --Mouse.position
+              ~ position
               ~ index
               ~ (snd <~ state)
 --}
