@@ -30,10 +30,10 @@ txt : Int -> Position -> Float -> Color -> Text -> Element
 txt wid position hght colr content =
     let t = text . Text.height hght <| Text.color colr content
     in  case position of
-          Center -> container wid (heightOf t) middle t
+          Center -> container wid (heightOf t + 6) middle t
           Offset offset ->
               let t' = width (wid-offset) t
-              in  flow down [ spacer wid (if offset < 50 then 20 else 4)
+              in  flow down [ spacer wid (if offset < 50 then 20 else 8)
                             , spacer offset (heightOf t') `beside` t' ]
 
 myBlue : Color
@@ -644,8 +644,8 @@ lift2 display positions (async translations)
 
     , [ title "Types"
       , bullet "Elm does not allow signals-of-signals (Monadic FRP)"
-      , subBullet "Monadic FRP has serious semantic and efficiency problems in pure languages"
-      , subBullet "Elm has a two-tiered type system rules out Signals-of-Signals"
+      , subBullet "Pure monadic FRP has serious semantic and efficiency problems"
+      , subBullet "Elm&rsquo;s two-tiered type system rules out Signals-of-Signals"
       , Anything . container 900 200 middle . width 600 <| image 726 168 "images/types.png"
       , bullet "Signal graphs can be built programmatically"
       , subBullet "Type system ensures that source code maps to intermediate language"
@@ -669,7 +669,7 @@ lift2 display positions (async translations)
 
     , [ title "Wrap Up"
       , Bullet <| toText "Remember to try out Elm at " ++ Text.link "/" (toText "elm-lang.org") ++ toText "! "
-      , subBullet "Gets about 300 visitors each day, reading docs and using the online interactive editor"
+      , subBullet "Gets around 400 visitors each day: reading docs, using the online editor, etc."
       , bullet "Key Contributions:"
       , subBullet "Simple and efficient semantics for FRP"
       , subBullet "Elm, a practical language for purely functional GUIs"
