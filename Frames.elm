@@ -153,7 +153,7 @@ foldp : (a -> b -> b) -> b -> Signal a -> Signal b
 
 myCount : Element
 myCount = center [markdown|```haskell
-foldp (\\_ c -> c+1) 0 Mouse.clicks
+foldp (\_ c -> c+1) 0 Mouse.clicks
 ```
 |]
 
