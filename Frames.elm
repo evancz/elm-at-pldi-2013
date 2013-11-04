@@ -272,11 +272,11 @@ frames =
                      monospace (toText "Mouse.position") ++
                      toText " is updated automatically"
       , let t clr = Text.color clr . toText
-        in  MousePart (\x y -> container 900 140 middle . text . monospace . typeface "inconsolata" . Text.height 32 <| concat [ t myBlue  "("
-                                                                                                                               , t myBlue' (show x)
-                                                                                                                               , t myBlue  ","
-                                                                                                                               , t myBlue' (show y)
-                                                                                                                               , t myBlue  ")" ])
+            point x y = concat [ t myBlue  "(", t myBlue' (show x)
+                               , t myBlue  ",", t myBlue' (show y), t myBlue  ")" ]
+        in  MousePart <| \x y ->
+                container 900 140 middle . text . monospace .
+                  typeface "inconsolata" . Text.height 32 <| point x y
       ]
 
     , [ title "Signals"
@@ -746,10 +746,10 @@ showFrame w h clicks pos showing fading fraction events =
         overlay = collage 900 600 <| concatMap (showEventHelp fraction) events
         (w',h') = (toFloat w, toFloat h)
         setScale = scale (min (w' / 900) (h' / 600))
-    in  collage w h <| [ rect w' h' |> filled (rgb 245 245 245)
-                       , setScale (toForm overlay)
-                       , setScale (toForm frame)
-                       ]
+    in  color (rgb 245 245 245) <| collage w h
+            [ setScale (toForm overlay)
+            , setScale (toForm frame)
+            ]
 
 scene (w,h) clicks pos (i,j,_,events) fraction =
     let frame = frames # i
